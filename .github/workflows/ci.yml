@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -33,3 +33,21 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t cloud-devops-capstone .
+
+  deploy:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Cloud-DevOps-Capstone-Project
+            git pull origin main
+            docker compose down
+            docker compose build
+            docker compose up -d
